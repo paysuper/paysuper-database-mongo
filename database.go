@@ -1,7 +1,8 @@
 package database
 
 import (
-	"github.com/globalsign/mgo"
+    "errors"
+    "github.com/globalsign/mgo"
 	"net/url"
 	"sync"
 )
@@ -90,12 +91,12 @@ func (s *Source) Close() {
 	}
 }
 
-func (s *Source) PingOk() bool {
+func (s *Source) Ping() error {
     if s.session == nil {
-        return false
+        return errors.New("No db session")
     }
     err := s.session.Ping()
-    return err == nil
+    return err
 }
 
 func (s *Source) Clone() (*Source, error) {
