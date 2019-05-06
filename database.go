@@ -90,6 +90,14 @@ func (s *Source) Close() {
 	}
 }
 
+func (s *Source) PingOk() bool {
+    if s.session == nil {
+        return false
+    }
+    err := s.session.Ping()
+    return err == nil
+}
+
 func (s *Source) Clone() (*Source, error) {
 	newSession := s.session.Copy()
 
