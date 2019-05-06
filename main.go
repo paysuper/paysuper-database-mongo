@@ -129,3 +129,5 @@ func (s *Source) Collection(name string) *mgo.Collection {
 
 	return col
 }
+
+func main() {}
