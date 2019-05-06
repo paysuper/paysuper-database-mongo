@@ -1,4 +1,4 @@
-package main
+package database
 
 import (
 	"github.com/globalsign/mgo"
@@ -129,5 +129,3 @@ func (s *Source) Collection(name string) *mgo.Collection {
 
 	return col
 }
-
-func main() {}
