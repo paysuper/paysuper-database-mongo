@@ -1,8 +1,9 @@
 package database
 
 import (
-    "errors"
-    "github.com/globalsign/mgo"
+	"errors"
+	"github.com/globalsign/mgo"
+	"github.com/kelseyhightower/envconfig"
 	"net/url"
 	"sync"
 )
@@ -10,10 +11,10 @@ import (
 const connectionScheme = "mongodb"
 
 type Connection struct {
-	Host     string
-	Database string
-	User     string
-	Password string
+	Host     string `envconfig:"MONGO_HOST" required:"true"`
+	Database string `envconfig:"MONGO_DB" required:"true"`
+	User     string `envconfig:"MONGO_USER" default:""`
+	Password string `envconfig:"MONGO_PASSWORD" default:""`
 }
 
 type Source struct {
@@ -53,10 +54,17 @@ func (c Connection) String() (s string) {
 	return u.String()
 }
 
-func NewDatabase(c Connection) (*Source, error) {
+func NewDatabase() (*Source, error) {
+	conn := Connection{}
+	err := envconfig.Process("", conn)
+
+	if err != nil {
+		return nil, err
+	}
+
 	d := &Source{}
 
-	if err := d.Open(c); err != nil {
+	if err := d.Open(conn); err != nil {
 		return nil, err
 	}
 
@@ -92,11 +100,11 @@ func (s *Source) Close() {
 }
 
 func (s *Source) Ping() error {
-    if s.session == nil {
-        return errors.New("No db session")
-    }
-    err := s.session.Ping()
-    return err
+	if s.session == nil {
+		return errors.New("No db session")
+	}
+	err := s.session.Ping()
+	return err
 }
 
 func (s *Source) Clone() (*Source, error) {
