@@ -1,0 +1,26 @@
+language: go
+sudo: false
+go:
+- 1.12.x
+stages:
+- test
+- name: deploy
+  if: branch = master
+jobs:
+  include:
+  - stage: test
+    services:
+    - mongodb
+    env:
+      - GO111MODULE=on
+      - MONGO_HOST=127.0.0.1:27017
+      - MONGO_DB=db_test
+    install: true
+    script:
+    - go test ./... -coverprofile=coverage.out -covermode=atomic -p=1
+    after_success:
+    - bash <(curl -s https://codecov.io/bash)
+notifications:
+  email: false
+  slack:
+    secure: b0jJIiQ0QXF2T3Pr/AZ8zZtmivmSKbYaTMuRbw0F4KRNmILPtCKYUK1sIHmwYmAC0INtuLIFWSqWKyMpGdIg+v2HGWohpKpxmOQeJWgMbxxDtS5jMIHloqNtsAuyMg8ILWT4aDoMF+0Rj/t9TnML92QnYUguBzH309BAMapOO6LiBAEOf0CLFafc7Fa+bsPijqQ7JaAT9xY59qD7Qi/mZ6N5wmDzBKfUA5D+uk29elONoaLoZhJLNg9hDRYf/BkKdn3wLDFuQ7O+j9NNXcPz4MpRxQyFoGqvKHQ+2fPf/zQRWYKUlO8n5eG6ntPA7kdMF2sa/06NIJUmySzDGJlarnVSdKU/vez+fNCD+NGu4pPSLX4qqY/th3SSszhJN9/x3S2YMCJtQDLSLBnhnOX6WNsaOFsCQwx1317YZs4OiZO1/IDLbDhrwkoQfHBLTwlYrusA+g0ErFlOB8yGXyFvksiwwXZL4CMLbfJT1/jpEV+M4Y6YiHxIPpqxmhjuwcF0fN47D8TZ7xq1NG9kj8QAgwbQr9bICnWtR+2SHr5YxgW3RlqacI2e4TVbU0+/6qwU3W5BEznkwDQzxK1ds8H3GnQkxVBCfTrY/F60ask8uwqt4NLCpHEjb6FcfZZCQgTfh86Ooc2E6QqKZGkcrhOqLxy7XoJ8hjfUUsRnTdoWPko=

@@ -6,20 +6,25 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"net/url"
 	"sync"
+	"time"
 )
 
-const connectionScheme = "mongodb"
+const (
+	connectionScheme    = "mongodb"
+	errorSessionNotInit = "database session not init"
+)
 
 type Connection struct {
-	Host     string `envconfig:"MONGO_HOST" required:"true"`
-	Database string `envconfig:"MONGO_DB" required:"true"`
-	User     string `envconfig:"MONGO_USER" default:""`
-	Password string `envconfig:"MONGO_PASSWORD" default:""`
+	Host        string `envconfig:"MONGO_HOST" required:"true"`
+	Database    string `envconfig:"MONGO_DB" required:"true"`
+	User        string `envconfig:"MONGO_USER" default:""`
+	Password    string `envconfig:"MONGO_PASSWORD" default:""`
+	DialTimeout int64  `envconfig:"MONGO_DIAL_TIMEOUT" default:"10"`
 }
 
 type Source struct {
 	name           string
-	connection     Connection
+	connection     *Connection
 	session        *mgo.Session
 	collections    map[string]*mgo.Collection
 	database       *mgo.Database
@@ -30,8 +35,6 @@ func (c Connection) String() (s string) {
 	if c.Database == "" {
 		return ""
 	}
-
-	vv := url.Values{}
 
 	var userInfo *url.Userinfo
 
@@ -44,18 +47,17 @@ func (c Connection) String() (s string) {
 	}
 
 	u := url.URL{
-		Scheme:   connectionScheme,
-		Path:     c.Database,
-		Host:     c.Host,
-		User:     userInfo,
-		RawQuery: vv.Encode(),
+		Scheme: connectionScheme,
+		Path:   c.Database,
+		Host:   c.Host,
+		User:   userInfo,
 	}
 
 	return u.String()
 }
 
 func NewDatabase() (*Source, error) {
-	conn := Connection{}
+	conn := &Connection{}
 	err := envconfig.Process("", conn)
 
 	if err != nil {
@@ -63,15 +65,16 @@ func NewDatabase() (*Source, error) {
 	}
 
 	d := &Source{}
+	err = d.Open(conn)
 
-	if err := d.Open(conn); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
 	return d, nil
 }
 
-func (s *Source) Open(conn Connection) error {
+func (s *Source) Open(conn *Connection) error {
 	s.connection = conn
 	return s.open()
 }
@@ -79,7 +82,7 @@ func (s *Source) Open(conn Connection) error {
 func (s *Source) open() error {
 	var err error
 
-	s.session, err = mgo.Dial(s.connection.String())
+	s.session, err = mgo.DialWithTimeout(s.connection.String(), time.Duration(s.connection.DialTimeout)*time.Second)
 
 	if err != nil {
 		return err
@@ -101,13 +104,13 @@ func (s *Source) Close() {
 
 func (s *Source) Ping() error {
 	if s.session == nil {
-		return errors.New("No db session")
+		return errors.New(errorSessionNotInit)
 	}
-	err := s.session.Ping()
-	return err
+
+	return s.session.Ping()
 }
 
-func (s *Source) Clone() (*Source, error) {
+func (s *Source) Clone() *Source {
 	newSession := s.session.Copy()
 
 	clone := &Source{
@@ -118,7 +121,7 @@ func (s *Source) Clone() (*Source, error) {
 		collections: map[string]*mgo.Collection{},
 	}
 
-	return clone, nil
+	return clone
 }
 
 func (s *Source) Drop() error {
@@ -133,14 +136,7 @@ func (s *Source) Collection(name string) *mgo.Collection {
 	var ok bool
 
 	if col, ok = s.collections[name]; !ok {
-		c, err := s.Clone()
-
-		if err != nil {
-			col = s.database.C(name)
-		} else {
-			col = c.database.C(name)
-		}
-
+		col = s.Clone().database.C(name)
 		s.collections[name] = col
 	}
 
