@@ -25,6 +25,18 @@ func Test_Database(t *testing.T) {
 }
 
 func (suite *DatabaseTestSuite) SetupTest() {
+	err := os.Setenv("MONGO_DIAL_TIMEOUT", "10")
+
+	if err != nil {
+		assert.FailNow(suite.T(), "Init env variable failed", "%v", err)
+	}
+
+	err = os.Unsetenv("MONGO_DNS")
+
+	if err != nil {
+		assert.FailNow(suite.T(), "Init env variable failed", "%v", err)
+	}
+
 	db, err := NewDatabase()
 
 	if err != nil {
@@ -91,6 +103,23 @@ func (suite *DatabaseTestSuite) TestDatabase_String_EmptyPassword() {
 	assert.Equal(suite.T(), "mongodb://database_user@localhost:27017/database_name", host)
 }
 
+func (suite *DatabaseTestSuite) TestDatabase_StringDns_Ok() {
+	conn := Connection{
+		Dns: "mongodb://database_user:database_password@localhost:27017/database_name",
+	}
+	host := conn.String()
+	assert.NotEmpty(suite.T(), host)
+	assert.Equal(suite.T(), "mongodb://database_user:database_password@localhost:27017/database_name", host)
+}
+
+func (suite *DatabaseTestSuite) TestDatabase_StringDnsEmpty_Ok() {
+	conn := Connection{
+		Dns: "some_incorrect_dns_string",
+	}
+	host := conn.String()
+	assert.Empty(suite.T(), host)
+}
+
 func (suite *DatabaseTestSuite) TestDatabase_NewDatabase_EnvVariablesNotSet_Error() {
 	mgoHost := os.Getenv("MONGO_HOST")
 	err := os.Unsetenv("MONGO_HOST")
@@ -99,29 +128,9 @@ func (suite *DatabaseTestSuite) TestDatabase_NewDatabase_EnvVariablesNotSet_Erro
 	db, err := NewDatabase()
 	assert.Error(suite.T(), err)
 	assert.Nil(suite.T(), db)
-	assert.Regexp(suite.T(), "MONGO_HOST", err.Error())
+	assert.Equal(suite.T(), errorConfigIncorrect, err.Error())
 
 	err = os.Setenv("MONGO_HOST", mgoHost)
-	assert.NoError(suite.T(), err)
-}
-
-func (suite *DatabaseTestSuite) TestDatabase_NewDatabase_DbHostEmpty_Error() {
-	mgoHost := os.Getenv("MONGO_HOST")
-	err := os.Setenv("MONGO_HOST", "")
-	assert.NoError(suite.T(), err)
-
-	err = os.Setenv("MONGO_DIAL_TIMEOUT", "1")
-	assert.NoError(suite.T(), err)
-
-	db, err := NewDatabase()
-	assert.Error(suite.T(), err)
-	assert.Nil(suite.T(), db)
-	assert.Equal(suite.T(), "no reachable servers", err.Error())
-
-	err = os.Setenv("MONGO_HOST", mgoHost)
-	assert.NoError(suite.T(), err)
-
-	err = os.Setenv("MONGO_DIAL_TIMEOUT", "10")
 	assert.NoError(suite.T(), err)
 }
 
@@ -202,4 +211,34 @@ func (suite *DatabaseTestSuite) TestDatabase_CrudOperations_Ok() {
 	assert.NoError(suite.T(), err)
 	assert.NotEmpty(suite.T(), recs2)
 	assert.Len(suite.T(), recs2, len(recsInterface)-1)
+}
+
+func (suite *DatabaseTestSuite) TestDatabase_EnvVariablesParse_Error() {
+	mgoDialTimeout := os.Getenv("MONGO_DIAL_TIMEOUT")
+	err := os.Setenv("MONGO_DIAL_TIMEOUT", "qwerty")
+	assert.NoError(suite.T(), err)
+
+	db, err := NewDatabase()
+	assert.Error(suite.T(), err)
+	assert.Nil(suite.T(), db)
+	assert.Regexp(suite.T(), "MONGO_DIAL_TIMEOUT", err.Error())
+
+	err = os.Setenv("MONGO_DIAL_TIMEOUT", mgoDialTimeout)
+	assert.NoError(suite.T(), err)
+}
+
+func (suite *DatabaseTestSuite) TestDatabase_NewDatabaseError() {
+	err := os.Setenv("MONGO_DNS", "mongodb://database_user:database_password@incorrect_host:7777/database_name")
+	assert.NoError(suite.T(), err)
+
+	err = os.Setenv("MONGO_DIAL_TIMEOUT", "1")
+	assert.NoError(suite.T(), err)
+
+	db, err := NewDatabase()
+	assert.Error(suite.T(), err)
+	assert.Nil(suite.T(), db)
+	assert.Equal(suite.T(), "no reachable servers", err.Error())
+
+	err = os.Unsetenv("MONGO_DNS")
+	assert.NoError(suite.T(), err)
 }

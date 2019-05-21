@@ -10,16 +10,19 @@ import (
 )
 
 const (
-	connectionScheme    = "mongodb"
-	errorSessionNotInit = "database session not init"
+	connectionScheme     = "mongodb"
+	errorSessionNotInit  = "database session not init"
+	errorConfigIncorrect = "env variables to config connection is incorrect"
 )
 
 type Connection struct {
-	Host        string `envconfig:"MONGO_HOST" required:"true"`
-	Database    string `envconfig:"MONGO_DB" required:"true"`
+	Host        string `envconfig:"MONGO_HOST"`
+	Database    string `envconfig:"MONGO_DB"`
 	User        string `envconfig:"MONGO_USER" default:""`
 	Password    string `envconfig:"MONGO_PASSWORD" default:""`
 	DialTimeout int64  `envconfig:"MONGO_DIAL_TIMEOUT" default:"10"`
+
+	Dns string `envconfig:"MONGO_DNS"`
 }
 
 type Source struct {
@@ -32,25 +35,36 @@ type Source struct {
 }
 
 func (c Connection) String() (s string) {
-	if c.Database == "" {
-		return ""
-	}
+	var u *url.URL
+	var err error
 
-	var userInfo *url.Userinfo
+	if c.Dns != "" {
+		u, err = url.ParseRequestURI(c.Dns)
 
-	if c.User != "" {
-		if c.Password == "" {
-			userInfo = url.User(c.User)
-		} else {
-			userInfo = url.UserPassword(c.User, c.Password)
+		if err != nil {
+			return ""
 		}
-	}
+	} else {
+		if c.Database == "" {
+			return ""
+		}
 
-	u := url.URL{
-		Scheme: connectionScheme,
-		Path:   c.Database,
-		Host:   c.Host,
-		User:   userInfo,
+		var userInfo *url.Userinfo
+
+		if c.User != "" {
+			if c.Password == "" {
+				userInfo = url.User(c.User)
+			} else {
+				userInfo = url.UserPassword(c.User, c.Password)
+			}
+		}
+
+		u = &url.URL{
+			Scheme: connectionScheme,
+			Path:   c.Database,
+			Host:   c.Host,
+			User:   userInfo,
+		}
 	}
 
 	return u.String()
@@ -62,6 +76,10 @@ func NewDatabase() (*Source, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	if conn.Dns == "" && (conn.Host == "" || conn.Database == "") {
+		return nil, errors.New(errorConfigIncorrect)
 	}
 
 	d := &Source{}
@@ -82,7 +100,8 @@ func (s *Source) Open(conn *Connection) error {
 func (s *Source) open() error {
 	var err error
 
-	s.session, err = mgo.DialWithTimeout(s.connection.String(), time.Duration(s.connection.DialTimeout)*time.Second)
+	u := s.connection.String()
+	s.session, err = mgo.DialWithTimeout(u, time.Duration(s.connection.DialTimeout)*time.Second)
 
 	if err != nil {
 		return err
