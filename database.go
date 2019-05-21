@@ -15,7 +15,7 @@ const (
 
 type Connection struct {
 	DialTimeout int64  `envconfig:"MONGO_DIAL_TIMEOUT" default:"10"`
-	Dsn         string `envconfig:"MONGO_DSN"`
+	Dsn         string `envconfig:"MONGO_DSN" required:"true"`
 }
 
 type Source struct {

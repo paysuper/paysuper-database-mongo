@@ -20,6 +20,10 @@ type Stub struct {
 	Field string        `bson:"field"`
 }
 
+var (
+	mongoDsn = os.Getenv("MONGO_DSN")
+)
+
 func Test_Database(t *testing.T) {
 	suite.Run(t, new(DatabaseTestSuite))
 }
@@ -31,7 +35,7 @@ func (suite *DatabaseTestSuite) SetupTest() {
 		assert.FailNow(suite.T(), "Init env variable failed", "%v", err)
 	}
 
-	err = os.Unsetenv("MONGO_DSN")
+	err = os.Setenv("MONGO_DSN", mongoDsn)
 
 	if err != nil {
 		assert.FailNow(suite.T(), "Init env variable failed", "%v", err)
@@ -165,17 +169,13 @@ func (suite *DatabaseTestSuite) TestDatabase_CrudOperations_Ok() {
 }
 
 func (suite *DatabaseTestSuite) TestDatabase_EnvVariablesParse_Error() {
-	mgoDialTimeout := os.Getenv("MONGO_DIAL_TIMEOUT")
-	err := os.Setenv("MONGO_DIAL_TIMEOUT", "qwerty")
+	err := os.Unsetenv("MONGO_DSN")
 	assert.NoError(suite.T(), err)
 
 	db, err := NewDatabase()
 	assert.Error(suite.T(), err)
 	assert.Nil(suite.T(), db)
-	assert.Regexp(suite.T(), "MONGO_DIAL_TIMEOUT", err.Error())
-
-	err = os.Setenv("MONGO_DIAL_TIMEOUT", mgoDialTimeout)
-	assert.NoError(suite.T(), err)
+	assert.Regexp(suite.T(), "MONGO_DSN", err.Error())
 }
 
 func (suite *DatabaseTestSuite) TestDatabase_NewDatabaseError() {
