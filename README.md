@@ -10,4 +10,4 @@ PaySuper MongoDB Driver
 | Name               | Required | Default  | Description                     |
 |:-------------------|:--------:|:---------|:--------------------------------|
 | MONGO_DIAL_TIMEOUT | -        | 10       | MongoBD dial timeout in seconds |
-| MONGO_DNS          | true     | -        | MongoBD DNS connection string   |
+| MONGO_DSN          | true     | -        | MongoBD DSN connection string   |
