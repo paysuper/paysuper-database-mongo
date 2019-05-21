@@ -50,7 +50,7 @@ func (suite *DatabaseTestSuite) SetupTest() {
 
 	assert.NotNil(suite.T(), db)
 	assert.NotNil(suite.T(), db.connection)
-	assert.IsType(suite.T(), &Connection{}, db.connection)
+	assert.IsType(suite.T(), &Options{}, db.connection)
 	assert.NotNil(suite.T(), db.session)
 	assert.IsType(suite.T(), &mgo.Session{}, db.session)
 	assert.NotNil(suite.T(), db.collections)
@@ -74,7 +74,7 @@ func (suite *DatabaseTestSuite) TearDownTest() {
 }
 
 func (suite *DatabaseTestSuite) TestDatabase_StringDns_Ok() {
-	conn := Connection{
+	conn := Options{
 		Dsn: "mongodb://database_user:database_password@localhost:27017/database_name",
 	}
 	host := conn.String()
@@ -83,7 +83,7 @@ func (suite *DatabaseTestSuite) TestDatabase_StringDns_Ok() {
 }
 
 func (suite *DatabaseTestSuite) TestDatabase_StringDnsEmpty_Ok() {
-	conn := Connection{
+	conn := Options{
 		Dsn: "some_incorrect_dns_string",
 	}
 	host := conn.String()
@@ -217,7 +217,7 @@ func (suite *DatabaseTestSuite) TestDatabase_NewDatabaseWithOpts_Ok() {
 	assert.NotNil(suite.T(), db.connection)
 	assert.Equal(suite.T(), u.String(), db.connection.Dsn)
 	assert.Equal(suite.T(), int64(1), db.connection.DialTimeout)
-	assert.IsType(suite.T(), &Connection{}, db.connection)
+	assert.IsType(suite.T(), &Options{}, db.connection)
 	assert.NotNil(suite.T(), db.session)
 	assert.IsType(suite.T(), &mgo.Session{}, db.session)
 	assert.NotNil(suite.T(), db.collections)

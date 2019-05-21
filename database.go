@@ -13,28 +13,23 @@ const (
 	errorSessionNotInit = "database session not init"
 )
 
-type Connection struct {
+type Options struct {
 	Dsn         string `envconfig:"MONGO_DSN" default:"mongodb://localhost:27017/test"`
 	DialTimeout int64  `envconfig:"MONGO_DIAL_TIMEOUT" default:"10"`
-}
-
-type Options struct {
-	Dsn         string
-	DialTimeout int64
 }
 
 type Option func(*Options)
 
 type Source struct {
 	name           string
-	connection     *Connection
+	connection     *Options
 	session        *mgo.Session
 	collections    map[string]*mgo.Collection
 	database       *mgo.Database
 	repositoriesMu sync.Mutex
 }
 
-func (c Connection) String() (s string) {
+func (c Options) String() (s string) {
 	var u *url.URL
 	var err error
 
@@ -61,7 +56,7 @@ func DialTimeout(t int64) Option {
 
 func NewDatabase(options ...Option) (*Source, error) {
 	opts := Options{}
-	conn := &Connection{}
+	conn := &Options{}
 
 	for _, opt := range options {
 		opt(&opts)
@@ -93,7 +88,7 @@ func NewDatabase(options ...Option) (*Source, error) {
 	return d, nil
 }
 
-func (s *Source) Open(conn *Connection) error {
+func (s *Source) Open(conn *Options) error {
 	s.connection = conn
 	return s.open()
 }
