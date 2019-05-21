@@ -10,19 +10,12 @@ import (
 )
 
 const (
-	connectionScheme     = "mongodb"
-	errorSessionNotInit  = "database session not init"
-	errorConfigIncorrect = "env variables to config connection is incorrect"
+	errorSessionNotInit = "database session not init"
 )
 
 type Connection struct {
-	Host        string `envconfig:"MONGO_HOST"`
-	Database    string `envconfig:"MONGO_DB"`
-	User        string `envconfig:"MONGO_USER" default:""`
-	Password    string `envconfig:"MONGO_PASSWORD" default:""`
 	DialTimeout int64  `envconfig:"MONGO_DIAL_TIMEOUT" default:"10"`
-
-	Dns string `envconfig:"MONGO_DNS"`
+	Dsn         string `envconfig:"MONGO_DSN"`
 }
 
 type Source struct {
@@ -38,33 +31,10 @@ func (c Connection) String() (s string) {
 	var u *url.URL
 	var err error
 
-	if c.Dns != "" {
-		u, err = url.ParseRequestURI(c.Dns)
+	u, err = url.ParseRequestURI(c.Dsn)
 
-		if err != nil {
-			return ""
-		}
-	} else {
-		if c.Database == "" {
-			return ""
-		}
-
-		var userInfo *url.Userinfo
-
-		if c.User != "" {
-			if c.Password == "" {
-				userInfo = url.User(c.User)
-			} else {
-				userInfo = url.UserPassword(c.User, c.Password)
-			}
-		}
-
-		u = &url.URL{
-			Scheme: connectionScheme,
-			Path:   c.Database,
-			Host:   c.Host,
-			User:   userInfo,
-		}
+	if err != nil {
+		return ""
 	}
 
 	return u.String()
@@ -76,10 +46,6 @@ func NewDatabase() (*Source, error) {
 
 	if err != nil {
 		return nil, err
-	}
-
-	if conn.Dns == "" && (conn.Host == "" || conn.Database == "") {
-		return nil, errors.New(errorConfigIncorrect)
 	}
 
 	d := &Source{}
