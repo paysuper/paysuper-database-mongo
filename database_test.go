@@ -5,6 +5,7 @@ import (
 	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"net/url"
 	"os"
 	"sync"
 	"testing"
@@ -169,13 +170,13 @@ func (suite *DatabaseTestSuite) TestDatabase_CrudOperations_Ok() {
 }
 
 func (suite *DatabaseTestSuite) TestDatabase_EnvVariablesParse_Error() {
-	err := os.Unsetenv("MONGO_DSN")
+	err := os.Setenv("MONGO_DIAL_TIMEOUT", "qwerty")
 	assert.NoError(suite.T(), err)
 
 	db, err := NewDatabase()
 	assert.Error(suite.T(), err)
 	assert.Nil(suite.T(), db)
-	assert.Regexp(suite.T(), "MONGO_DSN", err.Error())
+	assert.Regexp(suite.T(), "MONGO_DIAL_TIMEOUT", err.Error())
 }
 
 func (suite *DatabaseTestSuite) TestDatabase_NewDatabaseError() {
@@ -192,4 +193,37 @@ func (suite *DatabaseTestSuite) TestDatabase_NewDatabaseError() {
 
 	err = os.Unsetenv("MONGO_DSN")
 	assert.NoError(suite.T(), err)
+}
+
+func (suite *DatabaseTestSuite) TestDatabase_NewDatabaseWithOpts_Ok() {
+	u, err := url.ParseRequestURI(mongoDsn)
+	assert.NoError(suite.T(), err)
+
+	err = os.Unsetenv("MONGO_DSN")
+	assert.NoError(suite.T(), err)
+
+	err = os.Unsetenv("MONGO_DIAL_TIMEOUT")
+	assert.NoError(suite.T(), err)
+
+	u.Path = "/other_db_test"
+
+	opts := []Option{
+		Dsn(u.String()),
+		DialTimeout(1),
+	}
+	db, err := NewDatabase(opts...)
+	assert.NoError(suite.T(), err)
+	assert.NotNil(suite.T(), db)
+	assert.NotNil(suite.T(), db.connection)
+	assert.Equal(suite.T(), u.String(), db.connection.Dsn)
+	assert.Equal(suite.T(), int64(1), db.connection.DialTimeout)
+	assert.IsType(suite.T(), &Connection{}, db.connection)
+	assert.NotNil(suite.T(), db.session)
+	assert.IsType(suite.T(), &mgo.Session{}, db.session)
+	assert.NotNil(suite.T(), db.collections)
+	assert.Empty(suite.T(), db.collections)
+	assert.NotNil(suite.T(), db.database)
+	assert.IsType(suite.T(), &mgo.Database{}, db.database)
+	assert.NotNil(suite.T(), db.repositoriesMu)
+	assert.IsType(suite.T(), sync.Mutex{}, db.repositoriesMu)
 }

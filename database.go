@@ -14,9 +14,16 @@ const (
 )
 
 type Connection struct {
+	Dsn         string `envconfig:"MONGO_DSN" default:"mongodb://localhost:27017/test"`
 	DialTimeout int64  `envconfig:"MONGO_DIAL_TIMEOUT" default:"10"`
-	Dsn         string `envconfig:"MONGO_DSN" required:"true"`
 }
+
+type Options struct {
+	Dsn         string
+	DialTimeout int64
+}
+
+type Option func(*Options)
 
 type Source struct {
 	name           string
@@ -40,16 +47,44 @@ func (c Connection) String() (s string) {
 	return u.String()
 }
 
-func NewDatabase() (*Source, error) {
-	conn := &Connection{}
-	err := envconfig.Process("", conn)
+func Dsn(dsn string) Option {
+	return func(opts *Options) {
+		opts.Dsn = dsn
+	}
+}
 
-	if err != nil {
-		return nil, err
+func DialTimeout(t int64) Option {
+	return func(opts *Options) {
+		opts.DialTimeout = t
+	}
+}
+
+func NewDatabase(options ...Option) (*Source, error) {
+	opts := Options{}
+	conn := &Connection{}
+
+	for _, opt := range options {
+		opt(&opts)
+	}
+
+	if opts.Dsn == "" || opts.DialTimeout == 0 {
+		err := envconfig.Process("", conn)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if opts.Dsn != "" {
+		conn.Dsn = opts.Dsn
+	}
+
+	if opts.DialTimeout > 0 {
+		conn.DialTimeout = opts.DialTimeout
 	}
 
 	d := &Source{}
-	err = d.Open(conn)
+	err := d.Open(conn)
 
 	if err != nil {
 		return nil, err
