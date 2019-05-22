@@ -1,69 +1,94 @@
 package database
 
 import (
-    "errors"
-    "github.com/globalsign/mgo"
+	"errors"
+	"github.com/globalsign/mgo"
+	"github.com/kelseyhightower/envconfig"
 	"net/url"
 	"sync"
+	"time"
 )
 
-const connectionScheme = "mongodb"
+const (
+	errorSessionNotInit = "database session not init"
+)
 
-type Connection struct {
-	Host     string
-	Database string
-	User     string
-	Password string
+type Options struct {
+	Dsn         string `envconfig:"MONGO_DSN" default:"mongodb://localhost:27017/test"`
+	DialTimeout int64  `envconfig:"MONGO_DIAL_TIMEOUT" default:"10"`
 }
+
+type Option func(*Options)
 
 type Source struct {
 	name           string
-	connection     Connection
+	connection     *Options
 	session        *mgo.Session
 	collections    map[string]*mgo.Collection
 	database       *mgo.Database
 	repositoriesMu sync.Mutex
 }
 
-func (c Connection) String() (s string) {
-	if c.Database == "" {
+func (c Options) String() (s string) {
+	var u *url.URL
+	var err error
+
+	u, err = url.ParseRequestURI(c.Dsn)
+
+	if err != nil {
 		return ""
-	}
-
-	vv := url.Values{}
-
-	var userInfo *url.Userinfo
-
-	if c.User != "" {
-		if c.Password == "" {
-			userInfo = url.User(c.User)
-		} else {
-			userInfo = url.UserPassword(c.User, c.Password)
-		}
-	}
-
-	u := url.URL{
-		Scheme:   connectionScheme,
-		Path:     c.Database,
-		Host:     c.Host,
-		User:     userInfo,
-		RawQuery: vv.Encode(),
 	}
 
 	return u.String()
 }
 
-func NewDatabase(c Connection) (*Source, error) {
-	d := &Source{}
+func Dsn(dsn string) Option {
+	return func(opts *Options) {
+		opts.Dsn = dsn
+	}
+}
 
-	if err := d.Open(c); err != nil {
+func DialTimeout(t int64) Option {
+	return func(opts *Options) {
+		opts.DialTimeout = t
+	}
+}
+
+func NewDatabase(options ...Option) (*Source, error) {
+	opts := Options{}
+	conn := &Options{}
+
+	for _, opt := range options {
+		opt(&opts)
+	}
+
+	if opts.Dsn == "" || opts.DialTimeout == 0 {
+		err := envconfig.Process("", conn)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if opts.Dsn != "" {
+		conn.Dsn = opts.Dsn
+	}
+
+	if opts.DialTimeout > 0 {
+		conn.DialTimeout = opts.DialTimeout
+	}
+
+	d := &Source{}
+	err := d.Open(conn)
+
+	if err != nil {
 		return nil, err
 	}
 
 	return d, nil
 }
 
-func (s *Source) Open(conn Connection) error {
+func (s *Source) Open(conn *Options) error {
 	s.connection = conn
 	return s.open()
 }
@@ -71,7 +96,8 @@ func (s *Source) Open(conn Connection) error {
 func (s *Source) open() error {
 	var err error
 
-	s.session, err = mgo.Dial(s.connection.String())
+	u := s.connection.String()
+	s.session, err = mgo.DialWithTimeout(u, time.Duration(s.connection.DialTimeout)*time.Second)
 
 	if err != nil {
 		return err
@@ -92,14 +118,14 @@ func (s *Source) Close() {
 }
 
 func (s *Source) Ping() error {
-    if s.session == nil {
-        return errors.New("No db session")
-    }
-    err := s.session.Ping()
-    return err
+	if s.session == nil {
+		return errors.New(errorSessionNotInit)
+	}
+
+	return s.session.Ping()
 }
 
-func (s *Source) Clone() (*Source, error) {
+func (s *Source) Clone() *Source {
 	newSession := s.session.Copy()
 
 	clone := &Source{
@@ -110,7 +136,7 @@ func (s *Source) Clone() (*Source, error) {
 		collections: map[string]*mgo.Collection{},
 	}
 
-	return clone, nil
+	return clone
 }
 
 func (s *Source) Drop() error {
@@ -125,14 +151,7 @@ func (s *Source) Collection(name string) *mgo.Collection {
 	var ok bool
 
 	if col, ok = s.collections[name]; !ok {
-		c, err := s.Clone()
-
-		if err != nil {
-			col = s.database.C(name)
-		} else {
-			col = c.database.C(name)
-		}
-
+		col = s.Clone().database.C(name)
 		s.collections[name] = col
 	}
 
