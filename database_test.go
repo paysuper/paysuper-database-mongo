@@ -227,5 +227,5 @@ func (suite *DatabaseTestSuite) TestDatabase_NewDatabaseWithOpts_Ok() {
 	assert.IsType(suite.T(), &mgo.Database{}, db.database)
 	assert.NotNil(suite.T(), db.repositoriesMu)
 	assert.IsType(suite.T(), sync.Mutex{}, db.repositoriesMu)
-	assert.Equal(suite.T(), mgo.Secondary, db.connection.Mode)
+	assert.EqualValues(suite.T(), mgo.Secondary, db.connection.Mode)
 }

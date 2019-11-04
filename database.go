@@ -14,9 +14,9 @@ const (
 )
 
 type Options struct {
-	Dsn         string   `envconfig:"MONGO_DSN" default:"mongodb://localhost:27017/test"`
-	DialTimeout int64    `envconfig:"MONGO_DIAL_TIMEOUT" default:"10"`
-	Mode        mgo.Mode `envconfig:"MONGO_MODE" default:"1"`
+	Dsn         string `envconfig:"MONGO_DSN" default:"mongodb://localhost:27017/test"`
+	DialTimeout int64  `envconfig:"MONGO_DIAL_TIMEOUT" default:"10"`
+	Mode        int    `envconfig:"MONGO_MODE" default:"1"`
 }
 
 type Option func(*Options)
@@ -57,7 +57,7 @@ func DialTimeout(t int64) Option {
 
 func Mode(t mgo.Mode) Option {
 	return func(opts *Options) {
-		opts.Mode = t
+		opts.Mode = int(t)
 	}
 }
 
@@ -112,7 +112,7 @@ func (s *Source) open() error {
 		return err
 	}
 
-	s.session.SetMode(s.connection.Mode, true)
+	s.session.SetMode(mgo.Mode(s.connection.Mode), true)
 
 	s.collections = map[string]*mgo.Collection{}
 	s.database = s.session.DB("")
