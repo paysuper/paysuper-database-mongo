@@ -180,3 +180,31 @@ func (s *Source) Collection(name string) *mongo.Collection {
 
 	return col
 }
+
+func (s *Source) ToSortOption(fields []string) interface{} {
+	sort := make(map[string]interface{})
+
+	for _, field := range fields {
+		order := 1
+
+		if field == "" {
+			continue
+		}
+
+		switch field[0] {
+		case '+':
+			field = field[1:]
+		case '-':
+			order = -1
+			field = field[1:]
+		}
+
+		sort[field] = order
+	}
+
+	if len(sort) <= 0 {
+		sort["_id"] = 1
+	}
+
+	return sort
+}
