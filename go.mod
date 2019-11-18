@@ -1,7 +1,6 @@
-module github.com/paysuper/paysuper-database-mongo
+module gopkg.in/paysuper/paysuper-database-mongo.v1
 
 require (
-	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
