@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+const (
+	CodeDuplicateKeyErrorCollection = 11000
+)
+
 var (
 	ErrorSessionNotInit   = errors.New("database session not init")
 	ErrorDatabaseNotFound = errors.New("database name not found in DSN connection string")
@@ -181,7 +185,7 @@ func (s *Source) Collection(name string) *mongo.Collection {
 	return col
 }
 
-func (s *Source) ToSortOption(fields []string) interface{} {
+func ToSortOption(fields []string) interface{} {
 	sort := make(map[string]interface{})
 
 	for _, field := range fields {
@@ -207,4 +211,14 @@ func (s *Source) ToSortOption(fields []string) interface{} {
 	}
 
 	return sort
+}
+
+func IsDuplicate(err error) bool {
+	writeErr, ok := err.(mongo.WriteException)
+
+	if !ok {
+		return false
+	}
+
+	return writeErr.WriteErrors[0].Code == CodeDuplicateKeyErrorCollection
 }
