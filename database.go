@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/kelseyhightower/envconfig"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -221,4 +222,9 @@ func IsDuplicate(err error) bool {
 	}
 
 	return writeErr.WriteErrors[0].Code == CodeDuplicateKeyErrorCollection
+}
+
+func GetObjectIDCounter(objectID primitive.ObjectID) int64 {
+	b := []byte(objectID.Hex()[9:12])
+	return int64(uint32(b[0])<<16 | uint32(b[1])<<8 | uint32(b[2]))
 }
