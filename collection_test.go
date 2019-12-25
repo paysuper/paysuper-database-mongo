@@ -366,6 +366,65 @@ func (suite *CollectionTestSuite) TestCollection_UpdateOne_Ok() {
 	assert.Equal(suite.T(), err, mongo.ErrNoDocuments)
 }
 
+func (suite *CollectionTestSuite) TestCollection_BulkWrite_Ok() {
+	ctx := context.TODO()
+	models := []mongo.WriteModel{
+		mongo.NewUpdateManyModel().
+			SetFilter(bson.M{"field_string": "value1"}).
+			SetUpdate(bson.M{"$set": bson.M{"field_float": 1}}),
+		mongo.NewUpdateManyModel().
+			SetFilter(bson.M{"field_string": "value2"}).
+			SetUpdate(bson.M{"$set": bson.M{"field_float": 2}}),
+	}
+
+	var results []*Stub
+
+	cursor, err := suite.defaultDb.Collection(stubCollection).Find(ctx, bson.M{"field_string": "value1"})
+	assert.NoError(suite.T(), err)
+	err = cursor.All(ctx, &results)
+	assert.NoError(suite.T(), err)
+	assert.NotEmpty(suite.T(), results)
+
+	for _, v := range results {
+		assert.NotEqual(suite.T(), v.FieldFloat, 1)
+	}
+
+	cursor, err = suite.defaultDb.Collection(stubCollection).Find(ctx, bson.M{"field_string": "value2"})
+	assert.NoError(suite.T(), err)
+	err = cursor.All(ctx, &results)
+	assert.NoError(suite.T(), err)
+	assert.NotEmpty(suite.T(), results)
+
+	for _, v := range results {
+		assert.NotEqual(suite.T(), v.FieldFloat, 2)
+	}
+
+	res, err := suite.defaultDb.Collection(stubCollection).BulkWrite(ctx, models)
+	assert.NoError(suite.T(), err)
+	assert.EqualValues(suite.T(), res.MatchedCount, 5)
+	assert.EqualValues(suite.T(), res.ModifiedCount, 5)
+
+	cursor, err = suite.defaultDb.Collection(stubCollection).Find(ctx, bson.M{"field_string": "value1"})
+	assert.NoError(suite.T(), err)
+	err = cursor.All(ctx, &results)
+	assert.NoError(suite.T(), err)
+	assert.NotEmpty(suite.T(), results)
+
+	for _, v := range results {
+		assert.EqualValues(suite.T(), v.FieldFloat, 1)
+	}
+
+	cursor, err = suite.defaultDb.Collection(stubCollection).Find(ctx, bson.M{"field_string": "value2"})
+	assert.NoError(suite.T(), err)
+	err = cursor.All(ctx, &results)
+	assert.NoError(suite.T(), err)
+	assert.NotEmpty(suite.T(), results)
+
+	for _, v := range results {
+		assert.EqualValues(suite.T(), v.FieldFloat, 2)
+	}
+}
+
 func (suite *CollectionTestSuite) TestCollection_SingleResult_DecodeBytes_Ok() {
 	res := suite.defaultDb.Collection(stubCollection).FindOne(context.TODO(), bson.M{"field_string": "value4"})
 	assert.NoError(suite.T(), res.Err())

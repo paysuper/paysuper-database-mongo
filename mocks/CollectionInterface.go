@@ -43,6 +43,36 @@ func (_m *CollectionInterface) Aggregate(ctx context.Context, pipeline interface
 	return r0, r1
 }
 
+// BulkWrite provides a mock function with given fields: ctx, models, opts
+func (_m *CollectionInterface) BulkWrite(ctx context.Context, models []mongo.WriteModel, opts ...*options.BulkWriteOptions) (*mongo.BulkWriteResult, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, models)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *mongo.BulkWriteResult
+	if rf, ok := ret.Get(0).(func(context.Context, []mongo.WriteModel, ...*options.BulkWriteOptions) *mongo.BulkWriteResult); ok {
+		r0 = rf(ctx, models, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*mongo.BulkWriteResult)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []mongo.WriteModel, ...*options.BulkWriteOptions) error); ok {
+		r1 = rf(ctx, models, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CountDocuments provides a mock function with given fields: ctx, filter, opts
 func (_m *CollectionInterface) CountDocuments(ctx context.Context, filter interface{}, opts ...*options.CountOptions) (int64, error) {
 	_va := make([]interface{}, len(opts))

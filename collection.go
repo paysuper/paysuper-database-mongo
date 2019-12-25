@@ -23,6 +23,7 @@ type CollectionInterface interface {
 	ReplaceOne(ctx context.Context, filter interface{}, replacement interface{}, opts ...*options.ReplaceOptions) (*mongo.UpdateResult, error)
 	UpdateMany(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+	BulkWrite(ctx context.Context, models []mongo.WriteModel, opts ...*options.BulkWriteOptions) (*mongo.BulkWriteResult, error)
 }
 
 type SingleResultInterface interface {
@@ -179,6 +180,14 @@ func (m *Collection) UpdateOne(
 	opts ...*options.UpdateOptions,
 ) (*mongo.UpdateResult, error) {
 	return m.collection.UpdateOne(ctx, filter, update, opts...)
+}
+
+func (m *Collection) BulkWrite(
+	ctx context.Context,
+	models []mongo.WriteModel,
+	opts ...*options.BulkWriteOptions,
+) (*mongo.BulkWriteResult, error) {
+	return m.collection.BulkWrite(ctx, models, opts...)
 }
 
 func (m *SingleResult) Decode(v interface{}) error {
