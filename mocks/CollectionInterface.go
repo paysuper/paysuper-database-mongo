@@ -3,7 +3,7 @@
 package mocks
 
 import context "context"
-import database "gopkg.in/paysuper/paysuper-database-mongo.v1"
+import database "gopkg.in/paysuper/paysuper-database-mongo.v2"
 import mock "github.com/stretchr/testify/mock"
 import mongo "go.mongodb.org/mongo-driver/mongo"
 import options "go.mongodb.org/mongo-driver/mongo/options"
@@ -14,7 +14,7 @@ type CollectionInterface struct {
 }
 
 // Aggregate provides a mock function with given fields: ctx, pipeline, opts
-func (_m *CollectionInterface) Aggregate(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (*database.Cursor, error) {
+func (_m *CollectionInterface) Aggregate(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (database.CursorInterface, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -24,12 +24,12 @@ func (_m *CollectionInterface) Aggregate(ctx context.Context, pipeline interface
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *database.Cursor
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...*options.AggregateOptions) *database.Cursor); ok {
+	var r0 database.CursorInterface
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...*options.AggregateOptions) database.CursorInterface); ok {
 		r0 = rf(ctx, pipeline, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*database.Cursor)
+			r0 = ret.Get(0).(database.CursorInterface)
 		}
 	}
 
@@ -162,7 +162,7 @@ func (_m *CollectionInterface) Distinct(ctx context.Context, fieldName string, f
 }
 
 // Find provides a mock function with given fields: ctx, filter, opts
-func (_m *CollectionInterface) Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (*database.Cursor, error) {
+func (_m *CollectionInterface) Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (database.CursorInterface, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -172,12 +172,12 @@ func (_m *CollectionInterface) Find(ctx context.Context, filter interface{}, opt
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *database.Cursor
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...*options.FindOptions) *database.Cursor); ok {
+	var r0 database.CursorInterface
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...*options.FindOptions) database.CursorInterface); ok {
 		r0 = rf(ctx, filter, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*database.Cursor)
+			r0 = ret.Get(0).(database.CursorInterface)
 		}
 	}
 
@@ -192,7 +192,7 @@ func (_m *CollectionInterface) Find(ctx context.Context, filter interface{}, opt
 }
 
 // FindOne provides a mock function with given fields: ctx, filter, opts
-func (_m *CollectionInterface) FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *database.SingleResult {
+func (_m *CollectionInterface) FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) database.SingleResultInterface {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -202,12 +202,12 @@ func (_m *CollectionInterface) FindOne(ctx context.Context, filter interface{}, 
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *database.SingleResult
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...*options.FindOneOptions) *database.SingleResult); ok {
+	var r0 database.SingleResultInterface
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...*options.FindOneOptions) database.SingleResultInterface); ok {
 		r0 = rf(ctx, filter, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*database.SingleResult)
+			r0 = ret.Get(0).(database.SingleResultInterface)
 		}
 	}
 
@@ -215,7 +215,7 @@ func (_m *CollectionInterface) FindOne(ctx context.Context, filter interface{}, 
 }
 
 // FindOneAndDelete provides a mock function with given fields: ctx, filter, opts
-func (_m *CollectionInterface) FindOneAndDelete(ctx context.Context, filter interface{}, opts ...*options.FindOneAndDeleteOptions) *database.SingleResult {
+func (_m *CollectionInterface) FindOneAndDelete(ctx context.Context, filter interface{}, opts ...*options.FindOneAndDeleteOptions) database.SingleResultInterface {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -225,12 +225,12 @@ func (_m *CollectionInterface) FindOneAndDelete(ctx context.Context, filter inte
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *database.SingleResult
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...*options.FindOneAndDeleteOptions) *database.SingleResult); ok {
+	var r0 database.SingleResultInterface
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...*options.FindOneAndDeleteOptions) database.SingleResultInterface); ok {
 		r0 = rf(ctx, filter, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*database.SingleResult)
+			r0 = ret.Get(0).(database.SingleResultInterface)
 		}
 	}
 
@@ -238,7 +238,7 @@ func (_m *CollectionInterface) FindOneAndDelete(ctx context.Context, filter inte
 }
 
 // FindOneAndReplace provides a mock function with given fields: ctx, filter, replacement, opts
-func (_m *CollectionInterface) FindOneAndReplace(ctx context.Context, filter interface{}, replacement interface{}, opts ...*options.FindOneAndReplaceOptions) *database.SingleResult {
+func (_m *CollectionInterface) FindOneAndReplace(ctx context.Context, filter interface{}, replacement interface{}, opts ...*options.FindOneAndReplaceOptions) database.SingleResultInterface {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -248,12 +248,12 @@ func (_m *CollectionInterface) FindOneAndReplace(ctx context.Context, filter int
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *database.SingleResult
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, interface{}, ...*options.FindOneAndReplaceOptions) *database.SingleResult); ok {
+	var r0 database.SingleResultInterface
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, interface{}, ...*options.FindOneAndReplaceOptions) database.SingleResultInterface); ok {
 		r0 = rf(ctx, filter, replacement, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*database.SingleResult)
+			r0 = ret.Get(0).(database.SingleResultInterface)
 		}
 	}
 
@@ -261,7 +261,7 @@ func (_m *CollectionInterface) FindOneAndReplace(ctx context.Context, filter int
 }
 
 // FindOneAndUpdate provides a mock function with given fields: ctx, filter, update, opts
-func (_m *CollectionInterface) FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, opts ...*options.FindOneAndUpdateOptions) *database.SingleResult {
+func (_m *CollectionInterface) FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, opts ...*options.FindOneAndUpdateOptions) database.SingleResultInterface {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -271,12 +271,12 @@ func (_m *CollectionInterface) FindOneAndUpdate(ctx context.Context, filter inte
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *database.SingleResult
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, interface{}, ...*options.FindOneAndUpdateOptions) *database.SingleResult); ok {
+	var r0 database.SingleResultInterface
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, interface{}, ...*options.FindOneAndUpdateOptions) database.SingleResultInterface); ok {
 		r0 = rf(ctx, filter, update, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*database.SingleResult)
+			r0 = ret.Get(0).(database.SingleResultInterface)
 		}
 	}
 

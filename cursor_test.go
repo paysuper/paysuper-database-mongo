@@ -11,7 +11,7 @@ import (
 
 type CursorTestSuite struct {
 	suite.Suite
-	defaultDb *Source
+	defaultDb SourceInterface
 	stubs     []interface{}
 }
 

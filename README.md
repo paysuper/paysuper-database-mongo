@@ -5,6 +5,63 @@ PaySuper MongoDB Driver
 [![codecov](https://codecov.io/gh/paysuper/paysuper-database-mongo/branch/master/graph/badge.svg)](https://codecov.io/gh/paysuper/paysuper-database-mongo)
 [![go report](https://goreportcard.com/badge/github.com/paysuper/paysuper-database-mongo)](https://goreportcard.com/report/github.com/paysuper/paysuper-database-mongo)
 
+## Installation
+
+Use go get.
+
+	go get gopkg.in/paysuper/paysuper-database-mongo.v2
+
+Then import the validator package into your own code.
+
+	import "gopkg.in/paysuper/paysuper-database-mongo.v2"
+	
+## Usage
+
+```go
+import (
+    "context"
+    "go.mongodb.org/mongo-driver/bson"
+    database "gopkg.in/paysuper/paysuper-database-mongo.v2"
+    "log"
+)
+
+func main() {
+    opts := []database.Option{
+        database.Dsn("mongodb://localhost:27017/example_db"),
+    }
+    mongodb, err := database.NewDatabase(opts...)
+    if err != nil {
+        log.Fatal("MongoDB connection failed")
+    }
+
+    docs := []interface{}{
+        &Example{
+            String: "value1",
+            Int:    1,
+            Float:  11.11,
+        },
+        &Example{
+            String: "value2",
+            Int:    2,
+            Float:  22.22,
+        },
+        &Example{
+            String: "value3",
+            Int:    2,
+            Float:  33.33,
+        },
+    }
+    
+    _, err := mongodb.Collection(collectionName).InsertMany(context.Background(), docs)
+    
+    if err != nil {
+        log.Fatal("Data insert failed")
+    }
+}
+```
+
+More examples available in [examples directory](./examples)
+
 ## Environment variables:
 
 | Name               | Required | Default  | Description                     |

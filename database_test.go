@@ -14,7 +14,7 @@ import (
 
 type DatabaseTestSuite struct {
 	suite.Suite
-	defaultDb *Source
+	defaultDb SourceInterface
 }
 
 var (
@@ -37,17 +37,7 @@ func (suite *DatabaseTestSuite) SetupTest() {
 	}
 
 	assert.NotNil(suite.T(), db)
-	assert.NotNil(suite.T(), db.connection)
-	assert.IsType(suite.T(), &Options{}, db.connection)
-	assert.NotNil(suite.T(), db.client)
-	assert.IsType(suite.T(), &mongo.Client{}, db.client)
-	assert.NotNil(suite.T(), db.collections)
-	assert.Empty(suite.T(), db.collections)
-	assert.NotNil(suite.T(), db.database)
-	assert.IsType(suite.T(), &mongo.Database{}, db.database)
-	assert.NotNil(suite.T(), db.repositoriesMu)
-	assert.IsType(suite.T(), sync.Mutex{}, db.repositoriesMu)
-
+	assert.Implements(suite.T(), (*SourceInterface)(nil), db)
 	suite.defaultDb = db
 }
 
@@ -98,9 +88,12 @@ func (suite *DatabaseTestSuite) TestDatabase_Collection_Ok() {
 	col := suite.defaultDb.Collection("some_collection")
 	assert.NotNil(suite.T(), col)
 	assert.Implements(suite.T(), (*CollectionInterface)(nil), col)
-	assert.NotEmpty(suite.T(), suite.defaultDb.collections)
-	assert.Len(suite.T(), suite.defaultDb.collections, 1)
-	assert.Contains(suite.T(), suite.defaultDb.collections, "some_collection")
+
+	db, ok := suite.defaultDb.(*Source)
+	assert.True(suite.T(), ok)
+	assert.NotEmpty(suite.T(), db.collections)
+	assert.Len(suite.T(), db.collections, 1)
+	assert.Contains(suite.T(), db.collections, "some_collection")
 }
 
 func TestDatabase_NewDatabaseError(t *testing.T) {
@@ -134,9 +127,12 @@ func (suite *DatabaseTestSuite) TestDatabase_NewDatabaseWithOpts_Ok() {
 		Dsn(u.String()),
 		Mode("secondary"),
 	}
-	db, err := NewDatabase(opts...)
+	db0, err := NewDatabase(opts...)
 	assert.NoError(suite.T(), err)
-	assert.NotNil(suite.T(), db)
+	assert.NotNil(suite.T(), db0)
+
+	db, ok := db0.(*Source)
+	assert.True(suite.T(), ok)
 	assert.NotNil(suite.T(), db.connection)
 	assert.Equal(suite.T(), u.String(), db.connection.Dsn)
 	assert.IsType(suite.T(), &Options{}, db.connection)

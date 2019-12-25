@@ -17,6 +17,13 @@ var (
 	ErrorDatabaseNotFound = errors.New("database name not found in DSN connection string")
 )
 
+type SourceInterface interface {
+	Close() error
+	Ping() error
+	Drop() error
+	Collection(name string) CollectionInterface
+}
+
 type Options struct {
 	Dsn     string `envconfig:"MONGO_DSN" default:"mongodb://localhost:27017/test"`
 	Mode    string `envconfig:"MONGO_MODE" default:"primary"`
@@ -66,7 +73,7 @@ func Context(ctx context.Context) Option {
 	}
 }
 
-func NewDatabase(options ...Option) (*Source, error) {
+func NewDatabase(options ...Option) (SourceInterface, error) {
 	opts := Options{}
 	conn := &Options{}
 

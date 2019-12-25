@@ -8,16 +8,16 @@ import (
 )
 
 type CollectionInterface interface {
-	Aggregate(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (*Cursor, error)
+	Aggregate(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (CursorInterface, error)
 	CountDocuments(ctx context.Context, filter interface{}, opts ...*options.CountOptions) (int64, error)
 	DeleteMany(ctx context.Context, filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 	DeleteOne(ctx context.Context, filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 	Distinct(ctx context.Context, fieldName string, filter interface{}, opts ...*options.DistinctOptions) ([]interface{}, error)
-	Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (*Cursor, error)
-	FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *SingleResult
-	FindOneAndDelete(ctx context.Context, filter interface{}, opts ...*options.FindOneAndDeleteOptions) *SingleResult
-	FindOneAndReplace(ctx context.Context, filter interface{}, replacement interface{}, opts ...*options.FindOneAndReplaceOptions) *SingleResult
-	FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, opts ...*options.FindOneAndUpdateOptions) *SingleResult
+	Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (CursorInterface, error)
+	FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) SingleResultInterface
+	FindOneAndDelete(ctx context.Context, filter interface{}, opts ...*options.FindOneAndDeleteOptions) SingleResultInterface
+	FindOneAndReplace(ctx context.Context, filter interface{}, replacement interface{}, opts ...*options.FindOneAndReplaceOptions) SingleResultInterface
+	FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, opts ...*options.FindOneAndUpdateOptions) SingleResultInterface
 	InsertMany(ctx context.Context, documents []interface{}, opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, error)
 	InsertOne(ctx context.Context, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
 	ReplaceOne(ctx context.Context, filter interface{}, replacement interface{}, opts ...*options.ReplaceOptions) (*mongo.UpdateResult, error)
@@ -43,7 +43,7 @@ func (m *Collection) Aggregate(
 	ctx context.Context,
 	pipeline interface{},
 	opts ...*options.AggregateOptions,
-) (*Cursor, error) {
+) (CursorInterface, error) {
 	cursor, err := m.collection.Aggregate(ctx, pipeline, opts...)
 
 	if err != nil {
@@ -90,7 +90,7 @@ func (m *Collection) Find(
 	ctx context.Context,
 	filter interface{},
 	opts ...*options.FindOptions,
-) (*Cursor, error) {
+) (CursorInterface, error) {
 	cursor, err := m.collection.Find(ctx, filter, opts...)
 
 	if err != nil {
@@ -104,7 +104,7 @@ func (m *Collection) FindOne(
 	ctx context.Context,
 	filter interface{},
 	opts ...*options.FindOneOptions,
-) *SingleResult {
+) SingleResultInterface {
 	result := m.collection.FindOne(ctx, filter, opts...)
 	return &SingleResult{singleResult: result}
 }
@@ -113,7 +113,7 @@ func (m *Collection) FindOneAndDelete(
 	ctx context.Context,
 	filter interface{},
 	opts ...*options.FindOneAndDeleteOptions,
-) *SingleResult {
+) SingleResultInterface {
 	result := m.collection.FindOneAndDelete(ctx, filter, opts...)
 	return &SingleResult{singleResult: result}
 }
@@ -123,7 +123,7 @@ func (m *Collection) FindOneAndReplace(
 	filter interface{},
 	replacement interface{},
 	opts ...*options.FindOneAndReplaceOptions,
-) *SingleResult {
+) SingleResultInterface {
 	result := m.collection.FindOneAndReplace(ctx, filter, replacement, opts...)
 	return &SingleResult{singleResult: result}
 }
@@ -133,7 +133,7 @@ func (m *Collection) FindOneAndUpdate(
 	filter interface{},
 	update interface{},
 	opts ...*options.FindOneAndUpdateOptions,
-) *SingleResult {
+) SingleResultInterface {
 	result := m.collection.FindOneAndUpdate(ctx, filter, update, opts...)
 	return &SingleResult{singleResult: result}
 }

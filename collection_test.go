@@ -21,7 +21,7 @@ type Stub struct {
 
 type CollectionTestSuite struct {
 	suite.Suite
-	defaultDb *Source
+	defaultDb SourceInterface
 	stubs     []interface{}
 }
 
