@@ -425,6 +425,11 @@ func (suite *CollectionTestSuite) TestCollection_BulkWrite_Ok() {
 	}
 }
 
+func (suite *CollectionTestSuite) TestCollection_Indexes_Ok() {
+	res := suite.defaultDb.Collection(stubCollection).Indexes()
+	assert.NotNil(suite.T(), res)
+}
+
 func (suite *CollectionTestSuite) TestCollection_SingleResult_DecodeBytes_Ok() {
 	res := suite.defaultDb.Collection(stubCollection).FindOne(context.TODO(), bson.M{"field_string": "value4"})
 	assert.NoError(suite.T(), res.Err())

@@ -313,6 +313,20 @@ func (_m *CollectionInterface) FindOneAndUpdate(ctx context.Context, filter inte
 	return r0
 }
 
+// Indexes provides a mock function with given fields:
+func (_m *CollectionInterface) Indexes() mongo.IndexView {
+	ret := _m.Called()
+
+	var r0 mongo.IndexView
+	if rf, ok := ret.Get(0).(func() mongo.IndexView); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(mongo.IndexView)
+	}
+
+	return r0
+}
+
 // InsertMany provides a mock function with given fields: ctx, documents, opts
 func (_m *CollectionInterface) InsertMany(ctx context.Context, documents []interface{}, opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, error) {
 	_va := make([]interface{}, len(opts))

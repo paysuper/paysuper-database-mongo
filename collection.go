@@ -24,6 +24,7 @@ type CollectionInterface interface {
 	UpdateMany(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	BulkWrite(ctx context.Context, models []mongo.WriteModel, opts ...*options.BulkWriteOptions) (*mongo.BulkWriteResult, error)
+	Indexes() mongo.IndexView
 }
 
 type SingleResultInterface interface {
@@ -188,6 +189,10 @@ func (m *Collection) BulkWrite(
 	opts ...*options.BulkWriteOptions,
 ) (*mongo.BulkWriteResult, error) {
 	return m.collection.BulkWrite(ctx, models, opts...)
+}
+
+func (m *Collection) Indexes() mongo.IndexView {
+	return m.collection.Indexes()
 }
 
 func (m *SingleResult) Decode(v interface{}) error {
