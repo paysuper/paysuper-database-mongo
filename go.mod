@@ -1,4 +1,4 @@
-module gopkg.in/paysuper/paysuper-database-mongo.v1
+module gopkg.in/paysuper/paysuper-database-mongo.v2
 
 require (
 	github.com/go-stack/stack v1.8.0 // indirect
