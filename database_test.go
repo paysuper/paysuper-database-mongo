@@ -4,8 +4,6 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/url"
 	"os"
@@ -19,11 +17,6 @@ type DatabaseTestSuite struct {
 	defaultDb *Source
 }
 
-type Stub struct {
-	Id    primitive.ObjectID `bson:"_id"`
-	Field string             `bson:"field"`
-}
-
 var (
 	mongoDsn = os.Getenv("MONGO_DSN")
 )
@@ -33,20 +26,12 @@ func Test_Database(t *testing.T) {
 }
 
 func (suite *DatabaseTestSuite) SetupTest() {
-	err := os.Setenv("MONGO_DIAL_TIMEOUT", "10")
-
-	if err != nil {
-		assert.FailNow(suite.T(), "Init env variable failed", "%v", err)
-	}
-
-	err = os.Setenv("MONGO_DSN", mongoDsn)
-
+	err := os.Setenv("MONGO_DSN", mongoDsn)
 	if err != nil {
 		assert.FailNow(suite.T(), "Init env variable failed", "%v", err)
 	}
 
 	db, err := NewDatabase()
-
 	if err != nil {
 		assert.FailNow(suite.T(), "New Database init failed", "%v", err)
 	}
@@ -112,78 +97,10 @@ func (suite *DatabaseTestSuite) TestDatabase_Ping_SessionNotStart_Error() {
 func (suite *DatabaseTestSuite) TestDatabase_Collection_Ok() {
 	col := suite.defaultDb.Collection("some_collection")
 	assert.NotNil(suite.T(), col)
-	assert.IsType(suite.T(), &mongo.Collection{}, col)
+	assert.Implements(suite.T(), (*CollectionInterface)(nil), col)
 	assert.NotEmpty(suite.T(), suite.defaultDb.collections)
 	assert.Len(suite.T(), suite.defaultDb.collections, 1)
 	assert.Contains(suite.T(), suite.defaultDb.collections, "some_collection")
-}
-
-func (suite *DatabaseTestSuite) TestDatabase_CrudOperations_Ok() {
-	var recs []*Stub
-
-	cursor, err := suite.defaultDb.Collection("some_collection").Find(context.Background(), bson.M{})
-	assert.NoError(suite.T(), err)
-
-	err = cursor.All(context.Background(), &recs)
-	assert.NoError(suite.T(), err)
-	assert.Empty(suite.T(), recs)
-
-	stub1 := &Stub{
-		Id:    primitive.NewObjectID(),
-		Field: primitive.NewObjectID().Hex(),
-	}
-	stub2 := &Stub{
-		Id:    primitive.NewObjectID(),
-		Field: primitive.NewObjectID().Hex(),
-	}
-	stub3 := &Stub{
-		Id:    primitive.NewObjectID(),
-		Field: primitive.NewObjectID().Hex(),
-	}
-
-	recsInterface := []interface{}{stub1, stub2, stub3}
-	res, err := suite.defaultDb.Collection("some_collection").InsertMany(context.Background(), recsInterface)
-	assert.NoError(suite.T(), err)
-	assert.NotEmpty(suite.T(), res)
-
-	cursor, err = suite.defaultDb.Collection("some_collection").Find(context.Background(), bson.M{})
-	assert.NoError(suite.T(), err)
-
-	err = cursor.All(context.Background(), &recs)
-	assert.NoError(suite.T(), err)
-	assert.Len(suite.T(), recs, len(recsInterface))
-	assert.Equal(suite.T(), stub1.Id, recs[0].Id)
-	assert.Equal(suite.T(), stub1.Field, recs[0].Field)
-
-	_, err = suite.defaultDb.Collection("some_collection").
-		UpdateOne(
-			context.Background(),
-			bson.M{"_id": stub1.Id},
-			bson.M{"$set": bson.M{"field": primitive.NewObjectID().Hex()}},
-		)
-	assert.NoError(suite.T(), err)
-
-	var recs2 []*Stub
-	cursor, err = suite.defaultDb.Collection("some_collection").Find(context.Background(), bson.M{})
-	assert.NoError(suite.T(), err)
-
-	err = cursor.All(context.Background(), &recs2)
-	assert.NoError(suite.T(), err)
-	assert.NotEmpty(suite.T(), recs2)
-	assert.Len(suite.T(), recs2, len(recsInterface))
-	assert.Equal(suite.T(), recs[0].Id, recs2[0].Id)
-	assert.NotEqual(suite.T(), recs[0].Field, recs2[0].Field)
-
-	_, err = suite.defaultDb.Collection("some_collection").DeleteOne(context.Background(), bson.M{"_id": stub1.Id})
-	assert.NoError(suite.T(), err)
-
-	cursor, err = suite.defaultDb.Collection("some_collection").Find(context.Background(), bson.M{})
-	assert.NoError(suite.T(), err)
-
-	err = cursor.All(context.Background(), &recs2)
-	assert.NoError(suite.T(), err)
-	assert.NotEmpty(suite.T(), recs2)
-	assert.Len(suite.T(), recs2, len(recsInterface)-1)
 }
 
 func TestDatabase_NewDatabaseError(t *testing.T) {
@@ -232,4 +149,35 @@ func (suite *DatabaseTestSuite) TestDatabase_NewDatabaseWithOpts_Ok() {
 	assert.NotNil(suite.T(), db.repositoriesMu)
 	assert.IsType(suite.T(), sync.Mutex{}, db.repositoriesMu)
 	assert.EqualValues(suite.T(), "secondary", db.connection.Mode)
+}
+
+func (suite *DatabaseTestSuite) TestDatabase_NewDatabase_Error() {
+	opts := []Option{
+		Dsn("some_incorrect_dns_string"),
+	}
+	db, err := NewDatabase(opts...)
+	assert.Error(suite.T(), err)
+	assert.Equal(suite.T(), ErrorProtocolNotFound, err)
+	assert.Nil(suite.T(), db)
+}
+
+func (suite *DatabaseTestSuite) TestDatabase_NewDatabase_DsnDatabaseNotFound_Error() {
+	opts := []Option{
+		Dsn("mongodb://localhost:27017/"),
+	}
+	db, err := NewDatabase(opts...)
+	assert.Error(suite.T(), err)
+	assert.Equal(suite.T(), ErrorDatabaseNotFound, err)
+	assert.Nil(suite.T(), db)
+}
+
+func (suite *DatabaseTestSuite) TestDatabase_NewDatabase_IncorrectReadPref_Error() {
+	opts := []Option{
+		Dsn(mongoDsn),
+		Mode("some_incorrect_value"),
+	}
+	db, err := NewDatabase(opts...)
+	assert.Error(suite.T(), err)
+	assert.Regexp(suite.T(), "unknown read preference", err.Error())
+	assert.Nil(suite.T(), db)
 }

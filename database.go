@@ -4,17 +4,12 @@ import (
 	"context"
 	"errors"
 	"github.com/kelseyhightower/envconfig"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"net/url"
 	"sync"
 	"time"
-)
-
-const (
-	CodeDuplicateKeyErrorCollection = 11000
 )
 
 var (
@@ -37,7 +32,7 @@ type Source struct {
 
 	client      *mongo.Client
 	database    *mongo.Database
-	collections map[string]*mongo.Collection
+	collections map[string]*Collection
 }
 
 func (c Options) String() (s string) {
@@ -148,7 +143,7 @@ func (s *Source) open() error {
 		return err
 	}
 
-	s.collections = make(map[string]*mongo.Collection)
+	s.collections = make(map[string]*Collection)
 	s.database = s.client.Database(dsn.Database)
 	return nil
 }
@@ -173,58 +168,16 @@ func (s *Source) Drop() error {
 	return s.database.Drop(s.connection.Context)
 }
 
-func (s *Source) Collection(name string) *mongo.Collection {
+func (s *Source) Collection(name string) CollectionInterface {
 	s.repositoriesMu.Lock()
 	col, ok := s.collections[name]
 
 	if !ok {
-		col = s.database.Collection(name)
+		col = &Collection{
+			collection: s.database.Collection(name),
+		}
 		s.collections[name] = col
 	}
 	s.repositoriesMu.Unlock()
-
 	return col
-}
-
-func ToSortOption(fields []string) interface{} {
-	sort := make(map[string]interface{})
-
-	for _, field := range fields {
-		order := 1
-
-		if field == "" {
-			continue
-		}
-
-		switch field[0] {
-		case '+':
-			field = field[1:]
-		case '-':
-			order = -1
-			field = field[1:]
-		}
-
-		sort[field] = order
-	}
-
-	if len(sort) <= 0 {
-		sort["_id"] = 1
-	}
-
-	return sort
-}
-
-func IsDuplicate(err error) bool {
-	writeErr, ok := err.(mongo.WriteException)
-
-	if !ok {
-		return false
-	}
-
-	return writeErr.WriteErrors[0].Code == CodeDuplicateKeyErrorCollection
-}
-
-func GetObjectIDCounter(objectID primitive.ObjectID) int64 {
-	b := []byte(objectID.Hex()[9:12])
-	return int64(uint32(b[0])<<16 | uint32(b[1])<<8 | uint32(b[2]))
 }
