@@ -73,13 +73,13 @@ func (suite *DatabaseTestSuite) TestDatabase_StringDnsEmpty_Ok() {
 }
 
 func (suite *DatabaseTestSuite) TestDatabase_Ping_Ok() {
-	err := suite.defaultDb.Ping()
+	err := suite.defaultDb.Ping(context.TODO())
 	assert.NoError(suite.T(), err)
 }
 
 func (suite *DatabaseTestSuite) TestDatabase_Ping_SessionNotStart_Error() {
 	sess := &Source{}
-	err := sess.Ping()
+	err := sess.Ping(context.TODO())
 	assert.Error(suite.T(), err)
 	assert.Equal(suite.T(), ErrorSessionNotInit, err)
 }
@@ -106,7 +106,7 @@ func TestDatabase_NewDatabaseError(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, db)
 
-	err = db.Ping()
+	err = db.Ping(nil)
 	assert.Error(t, err)
 	assert.Equal(t, context.DeadlineExceeded, err)
 }

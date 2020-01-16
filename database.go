@@ -19,7 +19,7 @@ var (
 
 type SourceInterface interface {
 	Close() error
-	Ping() error
+	Ping(ctx context.Context) error
 	Drop() error
 	Collection(name string) CollectionInterface
 }
@@ -163,12 +163,16 @@ func (s *Source) Close() error {
 	return nil
 }
 
-func (s *Source) Ping() error {
+func (s *Source) Ping(ctx context.Context) error {
 	if s.client == nil {
 		return ErrorSessionNotInit
 	}
 
-	return s.client.Ping(s.connection.Context, readpref.Primary())
+	if ctx == nil {
+		ctx = s.connection.Context
+	}
+
+	return s.client.Ping(ctx, readpref.Primary())
 }
 
 func (s *Source) Drop() error {

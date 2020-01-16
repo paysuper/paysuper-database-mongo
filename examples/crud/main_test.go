@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	database "gopkg.in/paysuper/paysuper-database-mongo.v2"
 	"gopkg.in/paysuper/paysuper-database-mongo.v2/mocks"
+	"os"
 	"testing"
+	"time"
 )
 
 type CrudExampleTestSuite struct {
@@ -20,8 +23,12 @@ func Test_CrudExample(t *testing.T) {
 }
 
 func (suite *CrudExampleTestSuite) SetupTest() {
+	ctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
+	dsn := os.Getenv("MONGO_DSN")
+
 	opts := []database.Option{
-		database.Dsn("mongodb://localhost:27017/db_test"),
+		database.Dsn(dsn),
+		database.Context(ctx),
 	}
 	db, err := database.NewDatabase(opts...)
 	if err != nil {
