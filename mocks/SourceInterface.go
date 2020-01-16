@@ -2,6 +2,7 @@
 
 package mocks
 
+import context "context"
 import database "gopkg.in/paysuper/paysuper-database-mongo.v2"
 import mock "github.com/stretchr/testify/mock"
 
@@ -54,13 +55,13 @@ func (_m *SourceInterface) Drop() error {
 	return r0
 }
 
-// Ping provides a mock function with given fields:
-func (_m *SourceInterface) Ping() error {
-	ret := _m.Called()
+// Ping provides a mock function with given fields: ctx
+func (_m *SourceInterface) Ping(ctx context.Context) error {
+	ret := _m.Called(ctx)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
 	} else {
 		r0 = ret.Error(0)
 	}
