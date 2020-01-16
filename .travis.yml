@@ -1,7 +1,7 @@
 language: go
 sudo: false
 go:
-- 1.12.x
+- 1.13.x
 stages:
 - test
 - name: deploy
@@ -11,6 +11,9 @@ jobs:
   - stage: test
     services:
     - mongodb
+    cache:
+      directories:
+        - $GOPATH/pkg/mod    
     env:
     - GO111MODULE=on
     - MONGO_DSN=mongodb://localhost:27017/db_test
