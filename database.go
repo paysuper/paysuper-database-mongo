@@ -22,6 +22,7 @@ type SourceInterface interface {
 	Ping(ctx context.Context) error
 	Drop() error
 	Collection(name string) CollectionInterface
+	StartSession(opts ...*options.SessionOptions) (SessionInterface, error)
 }
 
 type Options struct {
@@ -191,4 +192,14 @@ func (s *Source) Collection(name string) CollectionInterface {
 	}
 	s.repositoriesMu.Unlock()
 	return col
+}
+
+func (s *Source) StartSession(opts ...*options.SessionOptions) (SessionInterface, error) {
+	session, err := s.client.StartSession(opts...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &Session{session: session}, nil
 }

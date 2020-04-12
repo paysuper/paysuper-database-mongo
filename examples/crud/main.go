@@ -109,3 +109,14 @@ func findOne(mongodb database.SourceInterface) (*Example, error) {
 
 	return res, nil
 }
+
+func transaction(mongodb database.SessionInterface) {
+	/*session, err := mongodb.StartSession()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = session.StartTransaction(); err != nil {
+		t.Fatal(err)
+	}*/
+}
