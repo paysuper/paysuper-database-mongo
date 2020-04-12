@@ -22,7 +22,7 @@ type SourceInterface interface {
 	Ping(ctx context.Context) error
 	Drop() error
 	Collection(name string) CollectionInterface
-	StartSession(opts ...*options.SessionOptions) (SessionInterface, error)
+	StartSession(opts ...*options.SessionOptions) (mongo.Session, error)
 }
 
 type Options struct {
@@ -194,12 +194,6 @@ func (s *Source) Collection(name string) CollectionInterface {
 	return col
 }
 
-func (s *Source) StartSession(opts ...*options.SessionOptions) (SessionInterface, error) {
-	session, err := s.client.StartSession(opts...)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &Session{session: session}, nil
+func (s *Source) StartSession(opts ...*options.SessionOptions) (mongo.Session, error) {
+	return s.client.StartSession(opts...)
 }
