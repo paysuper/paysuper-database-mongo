@@ -2,7 +2,7 @@
 
 [![License: GPL 3.0](https://img.shields.io/badge/License-GPL3.0-green.svg)](https://opensource.org/licenses/Gpl3.0)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/paysuper/paysuper-database-mongo/issues)
-[![Build Status](https://github.com/paysuper/paysuper-database-mongo/workflows/Build/badge.svg?branch=develop)](https://github.com/paysuper/paysuper-database-mongo/actions) 
+[![Build Status](https://github.com/paysuper/paysuper-database-mongo/workflows/Build/badge.svg?branch=master)](https://github.com/paysuper/paysuper-database-mongo/actions) 
 [![codecov](https://codecov.io/gh/paysuper/paysuper-database-mongo/branch/master/graph/badge.svg)](https://codecov.io/gh/paysuper/paysuper-database-mongo)
 [![go report](https://goreportcard.com/badge/github.com/paysuper/paysuper-database-mongo)](https://goreportcard.com/report/github.com/paysuper/paysuper-database-mongo)
 
