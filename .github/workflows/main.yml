@@ -1,0 +1,48 @@
+name: Build
+on:
+  push:
+    branches:
+  workflow_dispatch:
+
+env:
+  JENKINS_AUTH_TOKEN: ${{ secrets.JENKINS_AUTH_TOKEN }}
+  JENKINS_BUILD_TOKEN: ${{ secrets.JENKINS_BUILD_TOKEN }}
+  GO111MODULE: on
+
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.12'
+
+      - name: Start MongoDB v4.2.0
+        uses: supercharge/mongodb-github-action@1.2.0
+        with:
+          mongodb-version: 4.2
+
+      - name: tests
+        env:
+          MONGO_DSN: mongodb://localhost:27017/db_test
+        run: go test ./... -coverprofile=coverage.out -covermode=atomic -p=1
+      - name: publish codecov
+        run: bash <(curl -s https://codecov.io/bash)
+        
