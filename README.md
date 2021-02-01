@@ -1,7 +1,7 @@
 PaySuper MongoDB Driver
 =====
 
-[![Build Status](https://github.com/paysuper/paysuper-database-mongo/workflows/Build/badge.svg?branch=develop)](https://github.com/paysuper/paysuper-database-mongo/actions) 
+[![Build Status](https://github.com/paysuper/paysuper-database-mongo/workflows/Build/badge.svg?branch=master)](https://github.com/paysuper/paysuper-database-mongo/actions) 
 [![codecov](https://codecov.io/gh/paysuper/paysuper-database-mongo/branch/master/graph/badge.svg)](https://codecov.io/gh/paysuper/paysuper-database-mongo)
 [![go report](https://goreportcard.com/badge/github.com/paysuper/paysuper-database-mongo)](https://goreportcard.com/report/github.com/paysuper/paysuper-database-mongo)
 
